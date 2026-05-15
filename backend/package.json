@@ -1,0 +1,16 @@
+{
+  "name": "reachai-backend",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "hono": "^3.0.0",
+    "@supabase/supabase-js": "^2.38.0",
+    "openai": "^4.0.0",
+    "dotenv": "^16.0.0",
+    "node-fetch": "^3.3.0"
+  }
+}

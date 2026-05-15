@@ -1,0 +1,163 @@
+# ReachAI — AI Agent Rules
+# Use this file with Cursor, Copilot, Claude Code, or any AI coding agent.
+# These rules keep the agent focused, consistent, and aligned with the build plan.
+
+---
+
+## Project identity
+This is a Chrome extension (Manifest V3) that acts as an agentic AI assistant
+for LinkedIn DMs and Gmail. It uses React + Vite for the extension UI,
+Node.js + Hono for the backend, OpenAI GPT-4o for AI, Supabase for the database,
+and LemonSqueezy for payments. It is deployed on Digital Ocean.
+
+---
+
+## Golden rules — never break these
+
+1. NEVER call the OpenAI API directly from the extension.
+   All AI calls go through the backend. The API key must never touch the browser.
+
+2. NEVER hardcode secrets, API keys, or tokens anywhere in the codebase.
+   All secrets live in backend/.env only.
+
+3. NEVER commit .env files. Only commit .env.example with placeholder values.
+
+4. NEVER use Manifest V2 APIs. This project uses Manifest V3 only.
+   Use service workers, not background pages.
+   Use chrome.scripting, not chrome.tabs.executeScript (deprecated).
+
+5. NEVER add a new dependency without a clear reason.
+   Ask before installing packages not already in package.json.
+
+6. NEVER skip error handling. Every async function must have try/catch.
+   Every API response must check for error status before using data.
+
+7. NEVER mix popup logic with content script logic.
+   Popup = UI only. Content scripts = DOM reading/injection only.
+   Communication between them goes through chrome.runtime.sendMessage only.
+
+8. NEVER store sensitive user data (email content, message text) in
+   chrome.storage.local beyond what is needed for the current session.
+   Draft queue items should expire after 7 days maximum.
+
+---
+
+## Build approach — vertical, one feature at a time
+
+Always complete one feature fully before starting the next.
+A feature is DONE only when:
+  - Backend route works and is tested
+  - Extension UI renders correctly
+  - Error states are handled
+  - It works end-to-end in the actual browser
+
+Current build order:
+  [1] Extension shell + Google auth        ← START HERE
+  [2] Gmail thread reader + AI draft
+  [3] Draft queue dashboard
+  [4] LinkedIn DM reader + AI draft
+  [5] Auto-categorize conversations
+  [6] Follow-up reminders
+
+Do not start feature [N+1] until feature [N] is fully working.
+
+---
+
+## Code style
+
+Language: JavaScript (no TypeScript for now — keep it lean)
+Formatting: 2-space indentation, single quotes, semicolons
+Components: functional React only, hooks only — no class components
+Naming:
+  - React components: PascalCase (DraftCard.jsx)
+  - Functions and variables: camelCase
+  - Constants: UPPER_SNAKE_CASE
+  - Files: camelCase for non-components, PascalCase for React components
+  - API routes: kebab-case (/draft-queue not /draftQueue)
+
+---
+
+## File responsibilities — do not mix these
+
+extension/src/popup/         → UI components only. No direct DOM access.
+extension/src/content/       → DOM reading and injection only. No UI state.
+extension/src/background/    → Alarms, notifications, message routing. No UI.
+extension/src/lib/api.js     → ALL backend fetch calls. Nowhere else.
+extension/src/lib/auth.js    → ALL chrome.identity OAuth logic. Nowhere else.
+backend/src/services/openai.js → ALL GPT-4o calls. Never in routes directly.
+backend/src/lib/prompts.js   → ALL system prompts. Never inline in service files.
+
+---
+
+## Backend route conventions
+
+Every route must:
+  1. Run auth middleware first (verify user token)
+  2. Validate request body before processing
+  3. Return consistent JSON shape: { success: true, data: {} } or { success: false, error: "message" }
+  4. Use HTTP status codes correctly (200, 201, 400, 401, 403, 500)
+
+Example:
+  POST /drafts/generate
+  Body: { threadId, platform, messages[] }
+  Response: { success: true, data: { draftId, text, platform, contact } }
+
+---
+
+## GPT-4o usage rules
+
+Model: gpt-4o (never gpt-3.5, never gpt-4-turbo unless specified)
+All prompts live in: backend/src/lib/prompts.js
+Always include a system prompt. Never send user content as system prompt.
+Max tokens: 500 for drafts, 150 for categorization
+Temperature: 0.7 for drafts, 0.2 for categorization (deterministic labels)
+Always handle OpenAI rate limits with exponential backoff (max 3 retries)
+
+---
+
+## Chrome extension specific rules
+
+Permissions: only request what is actually used. No over-permissioning.
+Content Security Policy: no inline scripts, no eval()
+LinkedIn content script: use MutationObserver for SPA navigation detection.
+  LinkedIn does not do full page reloads — your script must watch for URL changes.
+Gmail content script: wait for Gmail's dynamic compose box to mount before injecting.
+  Use a MutationObserver on document.body with a debounce of 300ms.
+chrome.storage: use chrome.storage.local for user session data.
+  Use chrome.storage.sync only for small user preferences (< 8KB limit).
+
+---
+
+## Supabase rules
+
+Use the Supabase service key ONLY on the backend. Never in the extension.
+The extension authenticates users via Google OAuth, then sends the token to backend.
+Backend verifies the token and issues its own session.
+Tables to keep in mind:
+  users         (id, email, google_id, plan, created_at)
+  drafts        (id, user_id, platform, thread_id, text, status, created_at)
+  thread_labels (id, user_id, thread_id, platform, label, updated_at)
+  reminders     (id, user_id, thread_id, platform, due_at, status)
+
+---
+
+## What to do when stuck
+
+1. Check the PROJECT_STRUCTURE.md for where something belongs
+2. Check backend/src/lib/prompts.js before writing a new prompt
+3. Check extension/src/lib/api.js before writing a new fetch call
+4. Re-read the golden rules before adding a new pattern
+5. Ask: "Does this belong in popup, content, or background?" before writing code
+
+---
+
+## Out of scope for MVP (do not build yet)
+
+- Autonomous sending without user approval
+- Twitter/X integration
+- Calendar API integration
+- Team/multi-user accounts
+- Mobile app
+- Any Tier 2 or Tier 3 agentic features
+- Vector database or LangChain
+- Analytics (PostHog, Sentry) — add after MVP ships

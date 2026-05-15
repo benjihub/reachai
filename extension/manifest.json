@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "ReachAI",
+  "version": "0.1.0",
+  "description": "AI-powered outreach for LinkedIn + Gmail",
+  "permissions": [
+    "storage",
+    "identity",
+    "alarms",
+    "notifications",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://mail.google.com/*",
+    "https://www.linkedin.com/*",
+    "https://*.googleapis.com/*"
+  ],
+  "action": {
+    "default_popup": "src/popup/index.html",
+    "default_title": "ReachAI"
+  },
+  "background": {
+    "service_worker": "src/background/index.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["src/content/gmail.js"],
+      "run_at": "document_end"
+    },
+    {
+      "matches": ["https://www.linkedin.com/*"],
+      "js": ["src/content/linkedin.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/popup/index.html"],
+      "matches": ["https://mail.google.com/*", "https://www.linkedin.com/*"]
+    }
+  ]
+}
