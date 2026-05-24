@@ -4,11 +4,7 @@ export default function PlanBadge({ plan }) {
   const isPro = plan === 'pro';
 
   return (
-    <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
-      isPro
-        ? 'bg-purple-100 text-purple-700'
-        : 'bg-gray-100 text-gray-700'
-    }`}>
+    <div className={`plan-badge ${isPro ? 'plan-badge--pro' : 'plan-badge--free'}`}>
       {isPro ? '⭐ Pro' : 'Free'}
     </div>
   );

@@ -2,17 +2,24 @@ import React, { useState, useEffect } from 'react';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
 import Settings from './pages/Settings';
-import LoadingSpinner from './components/LoadingSpinner';
-import { getSession, clearSession, isSessionValid } from '../lib/storage';
+import { getSession, clearSession, clearDraftQueue, isSessionValid } from '../lib/storage';
 
 export default function Popup() {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [pendingCompose, setPendingCompose] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
       try {
+        const composeRequested = new URLSearchParams(window.location.search).get('compose') === '1';
+        const pending = await new Promise((resolve) => {
+          chrome.storage.local.get(['pendingPopupPage'], (result) => {
+            resolve(result.pendingPopupPage === 'compose');
+          });
+        });
+        setPendingCompose(composeRequested || pending);
+
         const valid = await isSessionValid();
         if (valid) {
           const session = await getSession();
@@ -24,8 +31,6 @@ export default function Popup() {
       } catch (error) {
         console.error('Session check error:', error);
         setCurrentPage('auth');
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -39,6 +44,7 @@ export default function Popup() {
 
   const handleSignOut = async () => {
     await clearSession();
+    await clearDraftQueue();
     setUser(null);
     setCurrentPage('auth');
   };
@@ -51,35 +57,51 @@ export default function Popup() {
     setCurrentPage('dashboard');
   };
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
-
   if (currentPage === 'auth') {
-    return <Auth onAuthSuccess={handleAuthSuccess} />;
+    return (
+      <div className="popup-shell">
+        <div className="popup-panel">
+          <Auth onAuthSuccess={handleAuthSuccess} />
+        </div>
+      </div>
+    );
   }
 
   if (currentPage === 'settings') {
     return (
-      <div className="w-full h-full flex flex-col">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 bg-gray-50">
-          <button
-            onClick={handleBackClick}
-            className="text-lg cursor-pointer hover:opacity-70"
-          >
-            ←
-          </button>
-          <h1 className="text-sm font-medium text-gray-900">Back</h1>
+      <div className="popup-shell">
+        <div className="popup-panel">
+          <div className="popup-backbar">
+            <button
+              type="button"
+              onClick={handleBackClick}
+              className="icon-button"
+              aria-label="Back to dashboard"
+            >
+              ←
+            </button>
+            <div className="popup-backbar__copy">
+              <span className="eyebrow">Preferences</span>
+              <h1 className="page-title">Settings</h1>
+            </div>
+          </div>
+          <div className="popup-panel__content">
+            <Settings user={user} onSignOut={handleSignOut} />
+          </div>
         </div>
-        <Settings user={user} onSignOut={handleSignOut} />
       </div>
     );
   }
 
   return (
-    <Dashboard
-      user={user}
-      onSettingsClick={handleSettingsClick}
-    />
+    <div className="popup-shell">
+      <div className="popup-panel">
+        <Dashboard
+          user={user}
+          onSettingsClick={handleSettingsClick}
+          initialCompose={pendingCompose}
+        />
+      </div>
+    </div>
   );
 }

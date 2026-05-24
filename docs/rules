@@ -8,7 +8,7 @@
 This is a Chrome extension (Manifest V3) that acts as an agentic AI assistant
 for LinkedIn DMs and Gmail. It uses React + Vite for the extension UI,
 Node.js + Hono for the backend, OpenAI GPT-4o for AI, Supabase for the database,
-and LemonSqueezy for payments. It is deployed on Digital Ocean.
+and Paddle for payments. It is deployed on Digital Ocean.
 
 ---
 

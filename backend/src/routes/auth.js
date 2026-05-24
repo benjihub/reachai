@@ -25,13 +25,20 @@ router.post('/google', async (c) => {
     // Step 1: Verify token with Google
     let tokenInfo;
     try {
-      const tokenInfoResponse = await fetch(
-        `https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${googleToken}`
-      );
+      const tokenInfoUrl = `https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${encodeURIComponent(googleToken)}`;
+      const tokenInfoResponse = await fetch(tokenInfoUrl);
 
       if (!tokenInfoResponse.ok) {
+        const errorPayload = await tokenInfoResponse.json().catch(() => ({}));
+        const errorDetail = errorPayload.error_description || errorPayload.error || '';
+        console.warn('Google tokeninfo non-200:', tokenInfoResponse.status, errorPayload);
+
+        const errorMessage = process.env.NODE_ENV === 'development'
+          ? `Invalid Google token (status ${tokenInfoResponse.status}) ${errorDetail}`.trim()
+          : 'Invalid Google token';
+
         return c.json(
-          { success: false, error: 'Invalid Google token' },
+          { success: false, error: errorMessage },
           401
         );
       }
@@ -39,8 +46,12 @@ router.post('/google', async (c) => {
       tokenInfo = await tokenInfoResponse.json();
     } catch (error) {
       console.error('Google token verification error:', error);
+      const errorMessage = process.env.NODE_ENV === 'development'
+        ? `Failed to verify Google token: ${error?.message || 'Unknown error'}`
+        : 'Failed to verify Google token';
+
       return c.json(
-        { success: false, error: 'Failed to verify Google token' },
+        { success: false, error: errorMessage },
         500
       );
     }
@@ -94,8 +105,12 @@ router.post('/google', async (c) => {
     });
   } catch (error) {
     console.error('POST /auth/google error:', error);
+    const message = process.env.NODE_ENV === 'development'
+      ? (error?.message || 'Internal server error')
+      : 'Internal server error';
+
     return c.json(
-      { success: false, error: 'Internal server error' },
+      { success: false, error: message },
       500
     );
   }

@@ -61,13 +61,13 @@ reachai/                                  ← root of your project
 │   │   │   ├── send.js                   ← POST /send/gmail, POST /send/linkedin-inject
 │   │   │   ├── categorize.js             ← POST /categorize — batch label threads
 │   │   │   ├── reminders.js              ← GET /reminders/pending, POST /reminders/snooze
-│   │   │   └── billing.js                ← POST /billing/webhook (LemonSqueezy), GET /billing/status
+│   │   │   └── billing.js                ← POST /billing/webhook (Paddle), GET /billing/status
 │   │   │
 │   │   ├── services/
 │   │   │   ├── openai.js                 ← all GPT-4o calls (draft, categorize, follow-up)
 │   │   │   ├── gmail.js                  ← Gmail API: read threads, send email
 │   │   │   ├── supabase.js               ← Supabase client + query helpers
-│   │   │   └── lemonsqueezy.js           ← webhook verification, license check
+│   │   │   └── paddle.js                 ← webhook verification, license check
 │   │   │
 │   │   ├── middleware/
 │   │   │   ├── auth.js                   ← verify user token on every request
@@ -116,8 +116,9 @@ SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_SERVICE_KEY=...
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
-LEMONSQUEEZY_WEBHOOK_SECRET=...
-LEMONSQUEEZY_STORE_ID=...
+# Paddle
+PADDLE_API_KEY=...
+PADDLE_WEBHOOK_SECRET=...
 PORT=3000
 ```
 

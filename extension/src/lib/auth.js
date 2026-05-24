@@ -20,8 +20,8 @@ export const launchGoogleOAuth = async () => {
   authUrl.searchParams.set('redirect_uri', redirectUrl);
   authUrl.searchParams.set('response_type', 'token');
   authUrl.searchParams.set('scope', scopes.join(' '));
-  authUrl.searchParams.set('access_type', 'offline');
-  authUrl.searchParams.set('prompt', 'consent');
+  authUrl.searchParams.set('prompt', 'consent select_account');
+  authUrl.searchParams.set('include_granted_scopes', 'true');
 
   return new Promise((resolve, reject) => {
     chrome.identity.launchWebAuthFlow(
@@ -41,15 +41,20 @@ export const launchGoogleOAuth = async () => {
         }
 
         const url = new URL(responseUrl);
-        const token = url.searchParams.get('access_token');
-        const expiresIn = parseInt(url.searchParams.get('expires_in'), 10);
+        const responseParams = new URLSearchParams(
+          url.hash.startsWith('#') ? url.hash.slice(1) : url.search.slice(1)
+        );
+        const token = responseParams.get('access_token');
+        const expiresInRaw = responseParams.get('expires_in');
+        const expiresIn = Number.parseInt(expiresInRaw, 10);
+        const expiresInSeconds = Number.isFinite(expiresIn) ? expiresIn : 3600;
 
         if (!token) {
           reject(new Error('No access token in response'));
           return;
         }
 
-        const tokenExpiry = Date.now() + (expiresIn * 1000);
+        const tokenExpiry = Date.now() + (expiresInSeconds * 1000);
         resolve({ token, tokenExpiry });
       }
     );

@@ -4,24 +4,25 @@ export default function GoogleSignInButton({ onClick, loading, error }) {
   return (
     <div className="flex flex-col gap-4">
       <button
+        type="button"
         onClick={onClick}
         disabled={loading}
-        className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+        className="button-primary auth-google-button"
       >
         {loading ? (
-          <span className="flex items-center justify-center gap-2">
-            <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            Signing in...
+          <span className="auth-google-button__content">
+            <span className="auth-spinner" />
+            <span className="auth-google-button__label">Signing in...</span>
           </span>
         ) : (
-          <span className="flex items-center justify-center gap-2">
-            <span>🔵</span>
-            Sign in with Google
+          <span className="auth-google-button__content">
+            <span className="auth-google-button__icon" aria-hidden="true" />
+            <span className="auth-google-button__label">Continue with Google</span>
           </span>
         )}
       </button>
       {error && (
-        <div className="px-4 py-2 bg-red-50 text-red-700 text-sm rounded border border-red-200">
+        <div className="surface" style={{ padding: '12px 14px', borderColor: 'rgba(220, 38, 38, 0.18)', background: 'rgba(220, 38, 38, 0.06)', color: 'var(--danger)' }}>
           {error}
         </div>
       )}

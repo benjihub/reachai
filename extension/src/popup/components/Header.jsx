@@ -1,20 +1,29 @@
 import React from 'react';
 import Avatar from './Avatar';
+import PlanBadge from './PlanBadge';
 
 export default function Header({ user, onSettingsClick }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
-      <div className="flex items-center gap-2">
+    <div className="app-header">
+      <div className="app-header__user">
         <Avatar url={user?.avatar} name={user?.name} />
-        <span className="text-sm font-medium text-gray-900">{user?.name || 'User'}</span>
+        <div className="app-header__copy">
+          <span className="app-header__name">{user?.name || 'User'}</span>
+          <span className="app-header__subtitle">Inbox copilot</span>
+        </div>
       </div>
-      <button
-        onClick={onSettingsClick}
-        className="p-1 hover:bg-gray-100 rounded transition"
-        title="Settings"
-      >
-        ⚙️
-      </button>
+      <div className="app-header__actions">
+        <PlanBadge plan={user?.plan} />
+        <button
+          type="button"
+          onClick={onSettingsClick}
+          className="icon-button"
+          title="Settings"
+          aria-label="Open settings"
+        >
+          ⚙
+        </button>
+      </div>
     </div>
   );
 }

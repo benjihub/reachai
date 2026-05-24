@@ -1,4 +1,4 @@
-export const API_URL = process.env.VITE_API_URL || 'http://localhost:3000';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export const GOOGLE_OAUTH_SCOPES = [
   'https://www.googleapis.com/auth/gmail.readonly',
@@ -9,7 +9,7 @@ export const GOOGLE_OAUTH_SCOPES = [
 
 export const PLAN_LIMITS = {
   free: {
-    draftsPerMonth: 50,
+    draftsPerMonth: 10,
     emailsPerDay: 5,
     features: ['draft', 'categorize']
   },
